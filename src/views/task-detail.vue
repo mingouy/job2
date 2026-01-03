@@ -27,17 +27,13 @@
                     class="form-group__input"
                     placeholder="请输入任务名称"
                     required
-                  >
+                  />
                   <div class="form-group__error" v-if="errors.title">{{ errors.title }}</div>
                 </div>
 
                 <div class="form-group">
                   <label for="category" class="form-group__label">所属分类</label>
-                  <select
-                    id="category"
-                    v-model="formData.category"
-                    class="form-group__select"
-                  >
+                  <select id="category" v-model="formData.category" class="form-group__select">
                     <option value="ASP.NET程序设计">ASP.NET程序设计</option>
                     <option value="金融数据分析">金融数据分析</option>
                     <option value="软件测试">软件测试</option>
@@ -56,11 +52,7 @@
               <div class="form-row">
                 <div class="form-group">
                   <label for="priority" class="form-group__label">优先级</label>
-                  <select
-                    id="priority"
-                    v-model="formData.priority"
-                    class="form-group__select"
-                  >
+                  <select id="priority" v-model="formData.priority" class="form-group__select">
                     <option value="high">高</option>
                     <option value="medium">中</option>
                     <option value="low">低</option>
@@ -69,11 +61,7 @@
 
                 <div class="form-group">
                   <label for="status" class="form-group__label">任务状态</label>
-                  <select
-                    id="status"
-                    v-model="formData.status"
-                    class="form-group__select"
-                  >
+                  <select id="status" v-model="formData.status" class="form-group__select">
                     <option value="todo">待办</option>
                     <option value="doing">进行中</option>
                     <option value="done">已完成</option>
@@ -88,7 +76,7 @@
                     v-model="formData.deadline"
                     class="form-group__input"
                     required
-                  >
+                  />
                   <div class="form-group__error" v-if="errors.deadline">{{ errors.deadline }}</div>
                 </div>
               </div>
@@ -111,10 +99,12 @@
                   id="attachment"
                   @change="handleFileUpload"
                   class="form-group__file"
-                >
+                />
                 <div class="form-group__preview" v-if="attachmentPreview">
                   <span class="form-group__preview-text">{{ attachmentPreview.name }}</span>
-                  <button type="button" class="form-group__remove" @click="removeAttachment">移除</button>
+                  <button type="button" class="form-group__remove" @click="removeAttachment">
+                    移除
+                  </button>
                 </div>
               </div>
             </form>
@@ -131,11 +121,7 @@
                 保存修改
               </button>
 
-              <button
-                type="button"
-                class="task-detail__btn task-detail__btn--back"
-                @click="goBack"
-              >
+              <button type="button" class="task-detail__btn task-detail__btn--back" @click="goBack">
                 返回列表
               </button>
 
@@ -155,18 +141,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue';
-import { useRouter, useRoute } from 'vue-router';
-import { validateTaskForm } from '../utils/validator';
-import type { Task } from '../utils/storage';
-import type { TaskFormData, FormValidationResult } from '../utils/validator';
+import { ref, reactive, computed, onMounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
+import { validateTaskForm } from '../utils/validator'
+import type { Task } from '../utils/storage'
+import type { FormValidationResult } from '../utils/validator'
 
 // Router and Route
-const router = useRouter();
-const route = useRoute();
+const router = useRouter()
+const route = useRoute()
 
 // Check if we're in edit mode
-const isEdit = computed(() => !!route.params.id);
+const isEdit = computed(() => !!route.params.id)
 
 // Form data
 const formData = reactive<Task>({
@@ -177,8 +163,8 @@ const formData = reactive<Task>({
   deadline: '',
   status: 'todo',
   description: '',
-  createTime: (new Date().toISOString().split('T')[0] as string)
-});
+  createTime: new Date().toISOString().split('T')[0] as string,
+})
 
 // Errors
 const errors = reactive<Record<string, string>>({
@@ -186,118 +172,118 @@ const errors = reactive<Record<string, string>>({
   deadline: '',
   priority: '',
   status: '',
-  description: ''
-});
+  description: '',
+})
 
 // File upload
-const attachmentPreview = ref<File | null>(null);
-const selectedFile = ref<File | null>(null);
+const attachmentPreview = ref<File | null>(null)
+const selectedFile = ref<File | null>(null)
 
 // Load tasks from LocalStorage
-const tasks = ref<Task[]>([]);
+const tasks = ref<Task[]>([])
 
 // Load tasks data
 const loadTasks = async () => {
-  const localTasks = localStorage.getItem('tasks');
+  const localTasks = localStorage.getItem('tasks')
   if (localTasks) {
-    tasks.value = JSON.parse(localTasks);
+    tasks.value = JSON.parse(localTasks)
   } else {
     // Load from JSON file if LocalStorage is empty
     try {
-      const data = await import('../data/tasks.json');
-      tasks.value = data.default as Task[];
-      localStorage.setItem('tasks', JSON.stringify(tasks.value));
+      const data = await import('../data/tasks.json')
+      tasks.value = data.default as Task[]
+      localStorage.setItem('tasks', JSON.stringify(tasks.value))
     } catch (error) {
-      console.error('Failed to load tasks:', error);
-      tasks.value = [];
+      console.error('Failed to load tasks:', error)
+      tasks.value = []
     }
   }
-};
+}
 
 // Load task data if editing
 const loadTaskData = () => {
   if (isEdit.value) {
-    const taskId = route.params.id as string;
-    const task = tasks.value.find(t => t.id === taskId);
+    const taskId = route.params.id as string
+    const task = tasks.value.find((t) => t.id === taskId)
     if (task) {
-      Object.assign(formData, task);
+      Object.assign(formData, task)
     } else {
       // Task not found, redirect to home
-      router.push('/');
+      router.push('/')
     }
   }
-};
+}
 
 // Initialize data
 onMounted(async () => {
-  await loadTasks();
-  loadTaskData();
-});
+  await loadTasks()
+  loadTaskData()
+})
 
 // Submit form
 const submitForm = () => {
-  const validationResult: FormValidationResult = validateTaskForm(formData);
+  const validationResult: FormValidationResult = validateTaskForm(formData)
 
   if (validationResult.isValid) {
     // Save to LocalStorage
     if (isEdit.value) {
       // Update existing task
-      const taskIndex = tasks.value.findIndex(t => t.id === formData.id);
+      const taskIndex = tasks.value.findIndex((t) => t.id === formData.id)
       if (taskIndex !== -1) {
-        tasks.value[taskIndex] = { ...formData };
+        tasks.value[taskIndex] = { ...formData }
       }
     } else {
       // Add new task
-      tasks.value.push({ ...formData });
+      tasks.value.push({ ...formData })
     }
 
-    localStorage.setItem('tasks', JSON.stringify(tasks.value));
+    localStorage.setItem('tasks', JSON.stringify(tasks.value))
 
     // Redirect to home
-    router.push('/');
+    router.push('/')
   } else {
     // Clear previous errors
-    Object.keys(errors).forEach(key => {
-      errors[key] = '';
-    });
+    Object.keys(errors).forEach((key) => {
+      errors[key] = ''
+    })
     // Assign new errors
-    Object.assign(errors, validationResult.errors);
+    Object.assign(errors, validationResult.errors)
   }
-};
+}
 
 // Delete task
 const deleteTask = () => {
   if (isEdit.value && confirm('确定要删除这个任务吗？')) {
-    tasks.value = tasks.value.filter(task => task.id !== formData.id);
-    localStorage.setItem('tasks', JSON.stringify(tasks.value));
-    router.push('/');
+    tasks.value = tasks.value.filter((task) => task.id !== formData.id)
+    localStorage.setItem('tasks', JSON.stringify(tasks.value))
+    router.push('/')
   }
-};
+}
 
 // Go back
 const goBack = () => {
-  router.push('/');
-};
+  router.push('/')
+}
 
 // Handle file upload
 const handleFileUpload = (event: Event) => {
-  const target = event.target as HTMLInputElement;
-  const file = target.files?.[0] || null;
+  const target = event.target as HTMLInputElement
+  const file = target.files?.[0] || null
   if (file) {
-    selectedFile.value = file;
-    attachmentPreview.value = file;
+    selectedFile.value = file
+    attachmentPreview.value = file
   }
-};
+}
 
 // Remove attachment
 const removeAttachment = () => {
-  selectedFile.value = null;
-  attachmentPreview.value = null;
-  const fileInput = document.getElementById('attachment') as HTMLInputElement;
+  selectedFile.value = null
+  attachmentPreview.value = null
+  const fileInput = document.getElementById('attachment') as HTMLInputElement
   if (fileInput) {
-    fileInput.value = '';
+    fileInput.value = ''
   }
-};
+}
 </script>
 
 <style scoped>

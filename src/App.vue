@@ -1,12 +1,49 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, onMounted, onUnmounted } from 'vue'
+
+// 导航栏背景透明度
+const headerOpacity = ref(1)
+
+// 回到顶部按钮可见性
+const showBackToTop = ref(false)
+
+// 监听滚动事件
+const handleScroll = () => {
+  const scrollY = window.scrollY
+
+  // 导航栏渐变效果
+  if (scrollY > 50) {
+    headerOpacity.value = 1
+  } else {
+    headerOpacity.value = 0.2 + (scrollY / 50) * 0.8
+  }
+
+  // 回到顶部按钮显示/隐藏
+  showBackToTop.value = scrollY > 200
+}
+
+// 回到顶部
+const scrollToTop = () => {
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth',
+  })
+}
+
+// 生命周期钩子
+onMounted(() => {
+  window.addEventListener('scroll', handleScroll)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('scroll', handleScroll)
+})
 </script>
 
 <template>
   <div class="app">
     <!-- 系统头部 -->
-    <header class="app-header">
+    <header class="app-header" :style="{ backgroundColor: `rgba(25, 118, 210, ${headerOpacity})` }">
       <h1 class="app-title">学生任务管理系统</h1>
       <div class="user-info">
         <span class="user-name">学生</span>
@@ -32,8 +69,13 @@ import { useRouter } from 'vue-router'
 
     <!-- 主内容区 -->
     <main class="app-main">
-      <router-view />
+      <transition name="page-transition" mode="out-in">
+        <router-view />
+      </transition>
     </main>
+
+    <!-- 回到顶部按钮 -->
+    <button class="back-to-top" :class="{ visible: showBackToTop }" @click="scrollToTop">↑</button>
 
     <!-- 页脚 -->
     <footer class="app-footer">
@@ -196,5 +238,62 @@ import { useRouter } from 'vue-router'
   .app-main {
     padding: 1rem;
   }
+}
+
+/* 页面切换动画 */
+.page-transition-enter-active,
+.page-transition-leave-active {
+  transition: all 0.3s ease;
+  position: absolute;
+  width: 100%;
+  left: 0;
+  top: 0;
+}
+
+.page-transition-enter-from {
+  transform: translateX(100%);
+  opacity: 0;
+}
+
+.page-transition-leave-to {
+  transform: translateX(-100%);
+  opacity: 0;
+  transition-duration: 0.25s;
+}
+
+/* 回到顶部按钮 */
+.back-to-top {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  width: 40px;
+  height: 40px;
+  background-color: #1976d2;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  opacity: 0;
+  transform: translateY(20px);
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+  z-index: 1000;
+}
+
+.back-to-top.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.back-to-top:hover {
+  background-color: #1565c0;
+  transform: translateY(0) scale(1.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 </style>

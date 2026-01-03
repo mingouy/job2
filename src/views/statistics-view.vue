@@ -25,12 +25,7 @@
               <p class="statistics__export-description">
                 导出当前所有任务数据，包括已完成和未完成的任务。导出的文件将包含完整的任务信息，可用于备份或数据分析。
               </p>
-              <button
-                class="statistics__export-btn"
-                @click="exportTasks"
-              >
-                导出任务数据
-              </button>
+              <button class="statistics__export-btn" @click="exportTasks">导出任务数据</button>
               <span class="statistics__export-note">
                 导出的文件格式为 JSON，包含所有任务的详细信息。
               </span>
@@ -44,10 +39,7 @@
               <div class="statistics__trend-content">
                 <!-- Chart.js Bar Chart for task completion trends -->
                 <div class="chart-container">
-                  <Bar
-                    :data="taskTrendData"
-                    :options="chartOptions"
-                  />
+                  <Bar :data="taskTrendData" :options="chartOptions" />
                 </div>
               </div>
             </div>
@@ -59,92 +51,89 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue';
-import { useRouter } from 'vue-router';
-import TaskStats from '../components/task-stats.vue';
-import type { Task } from '../utils/storage';
-import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title } from 'chart.js';
-import { Bar } from 'vue-chartjs';
-
-// Register Chart.js components
-ChartJS.register(
+import { ref, computed, onMounted } from 'vue'
+import TaskStats from '../components/task-stats.vue'
+import type { Task } from '../utils/storage'
+import {
+  Chart as ChartJS,
   ArcElement,
   Tooltip,
   Legend,
   CategoryScale,
   LinearScale,
   BarElement,
-  Title
-);
+  Title,
+} from 'chart.js'
+import { Bar } from 'vue-chartjs'
 
-// Router
-const router = useRouter();
+// Register Chart.js components
+ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title)
 
 // Tasks data
-const tasks = ref<Task[]>([]);
+const tasks = ref<Task[]>([])
 
 // Load tasks from LocalStorage
 const loadTasks = async () => {
-  const localTasks = localStorage.getItem('tasks');
+  const localTasks = localStorage.getItem('tasks')
   if (localTasks) {
-    tasks.value = JSON.parse(localTasks);
+    tasks.value = JSON.parse(localTasks)
   } else {
     // Load from JSON file if LocalStorage is empty
     try {
-      const data = await import('../data/tasks.json');
-      tasks.value = data.default as Task[];
-      localStorage.setItem('tasks', JSON.stringify(tasks.value));
+      const data = await import('../data/tasks.json')
+      tasks.value = data.default as Task[]
+      localStorage.setItem('tasks', JSON.stringify(tasks.value))
     } catch (error) {
-      console.error('Failed to load tasks:', error);
-      tasks.value = [];
+      console.error('Failed to load tasks:', error)
+      tasks.value = []
     }
   }
-};
+}
 
 // Initialize data
 onMounted(async () => {
-  await loadTasks();
-});
+  await loadTasks()
+})
 
 // Export tasks to JSON file
 const exportTasks = () => {
-  const taskData = JSON.stringify(tasks.value, null, 2);
-  const blob = new Blob([taskData], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'task-statistics.json';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-};
+  const taskData = JSON.stringify(tasks.value, null, 2)
+  const blob = new Blob([taskData], { type: 'application/json' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = 'task-statistics.json'
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
+}
 
 // Prepare chart data for task completion trends
 const taskTrendData = computed(() => {
   // Get last 7 days
-  const labels: string[] = [];
-  const completedCounts: number[] = [];
-  const totalCounts: number[] = [];
+  const labels: string[] = []
+  const completedCounts: number[] = []
+  const totalCounts: number[] = []
 
   for (let i = 6; i >= 0; i--) {
-    const date = new Date();
-    date.setDate(date.getDate() - i);
-    const dateStr = date.toISOString().split('T')[0] as string;
-    labels.push(dateStr.slice(5) as string); // Show MM-DD format
+    const date = new Date()
+    date.setDate(date.getDate() - i)
+    const dateStr = date.toISOString().split('T')[0] as string
+    labels.push(dateStr.slice(5) as string) // Show MM-DD format
 
     // Count completed tasks on this date
-    const completed = tasks.value.filter(task => {
-      return task.status === 'done' && task.deadline === dateStr;
-    }).length;
+    const completed = tasks.value.filter((task) => {
+      return task.status === 'done' && task.deadline === dateStr
+    }).length
 
     // Count total tasks due on this date
-    const total = tasks.value.filter(task => {
-      return task.deadline === dateStr;
-    }).length;
+    const total = tasks.value.filter((task) => {
+      return task.deadline === dateStr
+    }).length
 
-    completedCounts.push(completed);
-    totalCounts.push(total);
+    completedCounts.push(completed)
+    totalCounts.push(total)
   }
 
   return {
@@ -154,17 +143,17 @@ const taskTrendData = computed(() => {
         label: '已完成任务',
         data: completedCounts,
         backgroundColor: '#4caf50',
-        borderRadius: 4
+        borderRadius: 4,
       },
       {
         label: '未完成任务',
         data: totalCounts.map((total, index) => total - (completedCounts[index] || 0)),
         backgroundColor: '#ff6b6b',
-        borderRadius: 4
-      }
-    ]
-  };
-});
+        borderRadius: 4,
+      },
+    ],
+  }
+})
 
 // Chart options
 const chartOptions = {
@@ -183,95 +172,80 @@ const chartOptions = {
     y: {
       beginAtZero: true,
       ticks: {
-        precision: 0
-      }
+        precision: 0,
+      },
     },
   },
-};
+}
 
 // Calculate task completion trends for the simple chart
 const completedLastWeek = computed(() => {
-  const oneWeekAgo = new Date();
-  oneWeekAgo.setDate(oneWeekAgo.getDate() - 14);
-  const today = new Date();
-  today.setDate(today.getDate() - 7);
+  const oneWeekAgo = new Date()
+  oneWeekAgo.setDate(oneWeekAgo.getDate() - 14)
+  const today = new Date()
+  today.setDate(today.getDate() - 7)
 
-  return tasks.value.filter(task => {
-    const deadline = new Date(task.deadline);
-    return deadline >= oneWeekAgo && deadline < today && task.status === 'done';
-  }).length;
-});
+  return tasks.value.filter((task) => {
+    const deadline = new Date(task.deadline)
+    return deadline >= oneWeekAgo && deadline < today && task.status === 'done'
+  }).length
+})
 
 const totalLastWeek = computed(() => {
-  const oneWeekAgo = new Date();
-  oneWeekAgo.setDate(oneWeekAgo.getDate() - 14);
-  const today = new Date();
-  today.setDate(today.getDate() - 7);
+  const oneWeekAgo = new Date()
+  oneWeekAgo.setDate(oneWeekAgo.getDate() - 14)
+  const today = new Date()
+  today.setDate(today.getDate() - 7)
 
-  return tasks.value.filter(task => {
-    const deadline = new Date(task.deadline);
-    return deadline >= oneWeekAgo && deadline < today;
-  }).length;
-});
+  return tasks.value.filter((task) => {
+    const deadline = new Date(task.deadline)
+    return deadline >= oneWeekAgo && deadline < today
+  }).length
+})
 
 const completedLastWeekPercentage = computed(() => {
-  if (totalLastWeek.value === 0) return 0;
-  return Math.round((completedLastWeek.value / totalLastWeek.value) * 100);
-});
-
-const todoLastWeekPercentage = computed(() => {
-  if (totalLastWeek.value === 0) return 0;
-  return 100 - completedLastWeekPercentage.value;
-});
+  if (totalLastWeek.value === 0) return 0
+  return Math.round((completedLastWeek.value / totalLastWeek.value) * 100)
+})
 
 const completedThisWeek = computed(() => {
-  const today = new Date();
-  const oneWeekLater = new Date();
-  oneWeekLater.setDate(today.getDate() + 7);
+  const today = new Date()
+  const oneWeekLater = new Date()
+  oneWeekLater.setDate(today.getDate() + 7)
 
-  return tasks.value.filter(task => {
-    const deadline = new Date(task.deadline);
-    return deadline >= today && deadline < oneWeekLater && task.status === 'done';
-  }).length;
-});
+  return tasks.value.filter((task) => {
+    const deadline = new Date(task.deadline)
+    return deadline >= today && deadline < oneWeekLater && task.status === 'done'
+  }).length
+})
 
 const totalThisWeek = computed(() => {
-  const today = new Date();
-  const oneWeekLater = new Date();
-  oneWeekLater.setDate(today.getDate() + 7);
+  const today = new Date()
+  const oneWeekLater = new Date()
+  oneWeekLater.setDate(today.getDate() + 7)
 
-  return tasks.value.filter(task => {
-    const deadline = new Date(task.deadline);
-    return deadline >= today && deadline < oneWeekLater;
-  }).length;
-});
+  return tasks.value.filter((task) => {
+    const deadline = new Date(task.deadline)
+    return deadline >= today && deadline < oneWeekLater
+  }).length
+})
 
 const completedThisWeekPercentage = computed(() => {
-  if (totalThisWeek.value === 0) return 0;
-  return Math.round((completedThisWeek.value / totalThisWeek.value) * 100);
-});
-
-const todoThisWeekPercentage = computed(() => {
-  if (totalThisWeek.value === 0) return 0;
-  return 100 - completedThisWeekPercentage.value;
-});
+  if (totalThisWeek.value === 0) return 0
+  return Math.round((completedThisWeek.value / totalThisWeek.value) * 100)
+})
 
 const totalNextWeek = computed(() => {
-  const oneWeekLater = new Date();
-  oneWeekLater.setDate(oneWeekLater.getDate() + 7);
-  const twoWeeksLater = new Date();
-  twoWeeksLater.setDate(twoWeeksLater.getDate() + 14);
+  const oneWeekLater = new Date()
+  oneWeekLater.setDate(oneWeekLater.getDate() + 7)
+  const twoWeeksLater = new Date()
+  twoWeeksLater.setDate(twoWeeksLater.getDate() + 14)
 
-  return tasks.value.filter(task => {
-    const deadline = new Date(task.deadline);
-    return deadline >= oneWeekLater && deadline < twoWeeksLater;
-  }).length;
-});
-
-const todoNextWeekPercentage = computed(() => {
-  if (totalNextWeek.value === 0) return 0;
-  return 100;
-});
+  return tasks.value.filter((task) => {
+    const deadline = new Date(task.deadline)
+    return deadline >= oneWeekLater && deadline < twoWeeksLater
+  }).length
+})
 </script>
 
 <style scoped>

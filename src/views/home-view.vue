@@ -1,5 +1,8 @@
 <template>
   <div class="app-container">
+    <!-- 加载动画 -->
+    <Loading :visible="isLoading" text="加载任务中..." />
+
     <!-- 头部 -->
     <header class="app-header">
       <div class="app-header__container">
@@ -74,7 +77,9 @@
             <h3 class="overdue-reminder__title">🔔 逾期提醒</h3>
             <ul class="overdue-reminder__list">
               <li v-for="task in overdueTasks" :key="task.id" class="overdue-reminder__item">
-                <router-link :to="`/task-detail/${task.id}`" class="overdue-reminder__link">{{ task.title }}</router-link>
+                <router-link :to="`/task-detail/${task.id}`" class="overdue-reminder__link">{{
+                  task.title
+                }}</router-link>
                 <span class="overdue-reminder__date">{{ task.deadline }}</span>
               </li>
             </ul>
@@ -96,11 +101,7 @@
     </button>
 
     <!-- 添加任务表单弹窗 -->
-    <TaskForm
-      v-if="showAddForm"
-      @save="addTask"
-      @close="showAddForm = false"
-    />
+    <TaskForm v-if="showAddForm" @save="addTask" @close="showAddForm = false" />
 
     <!-- 页脚 -->
     <footer class="app-footer">
@@ -112,156 +113,172 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
-import TaskList from '../components/task-list.vue';
-import TaskForm from '../components/task-form.vue';
-import TaskFilter from '../components/task-filter.vue';
-import TaskStats from '../components/task-stats.vue';
-import type { Task } from '../utils/storage';
-import { isOverdue } from '../utils/date-format';
+import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import TaskList from '../components/task-list.vue'
+import TaskForm from '../components/task-form.vue'
+import TaskFilter from '../components/task-filter.vue'
+import TaskStats from '../components/task-stats.vue'
+import Loading from '../components/loading.vue'
+import type { Task } from '../utils/storage'
+import { isOverdue } from '../utils/date-format'
 
 // Router
-const router = useRouter();
+const router = useRouter()
 
 // Tasks data
-const tasks = ref<Task[]>([]);
+const tasks = ref<Task[]>([])
+
+// 加载状态
+const isLoading = ref(true)
 
 // Add form visibility
-const showAddForm = ref(false);
+const showAddForm = ref(false)
 
 // Filter parameters
 const filterParams = ref({
   status: 'all',
   priority: 'all',
   timeRange: 'all',
-  search: ''
-});
+  search: '',
+})
 
 // Load tasks from LocalStorage or JSON
 const loadTasks = async () => {
+  // 显示加载动画
+  isLoading.value = true
+
   // Try to load from LocalStorage first
-  const localTasks = localStorage.getItem('tasks');
+  const localTasks = localStorage.getItem('tasks')
   if (localTasks) {
-    tasks.value = JSON.parse(localTasks);
+    tasks.value = JSON.parse(localTasks)
+    // 延迟隐藏加载动画
+    setTimeout(() => {
+      isLoading.value = false
+    }, 300)
   } else {
     // Load from JSON file if LocalStorage is empty
     try {
-      const data = await import('../data/tasks.json');
-      tasks.value = data.default as Task[];
+      const data = await import('../data/tasks.json')
+      tasks.value = data.default as Task[]
       // Save to LocalStorage
-      localStorage.setItem('tasks', JSON.stringify(tasks.value));
+      localStorage.setItem('tasks', JSON.stringify(tasks.value))
     } catch (error) {
-      console.error('Failed to load tasks from JSON:', error);
+      console.error('Failed to load tasks from JSON:', error)
       // Fallback to empty array
-      tasks.value = [];
+      tasks.value = []
+    } finally {
+      // 延迟隐藏加载动画
+      setTimeout(() => {
+        isLoading.value = false
+      }, 300)
     }
   }
-};
+}
 
 // Initialize tasks
 onMounted(() => {
-  loadTasks();
-});
+  loadTasks()
+})
 
 // Save tasks to LocalStorage
 const saveTasks = () => {
-  localStorage.setItem('tasks', JSON.stringify(tasks.value));
-};
+  localStorage.setItem('tasks', JSON.stringify(tasks.value))
+}
 
 // Handle filter change
 const handleFilterChange = (params: typeof filterParams.value) => {
-  filterParams.value = params;
-};
+  filterParams.value = params
+}
 
 // Filtered tasks by status
 const filteredTasks = computed(() => {
   // Apply search filter first
-  let filtered = [...tasks.value].filter(task => {
-    return task.title.toLowerCase().includes(filterParams.value.search.toLowerCase());
-  });
+  let filtered = [...tasks.value].filter((task) => {
+    return task.title.toLowerCase().includes(filterParams.value.search.toLowerCase())
+  })
 
   // Apply priority filter
   if (filterParams.value.priority !== 'all') {
-    filtered = filtered.filter(task => task.priority === filterParams.value.priority);
+    filtered = filtered.filter((task) => task.priority === filterParams.value.priority)
   }
 
   // Apply time range filter
-  filtered = filtered.filter(task => {
-    const taskDate = new Date(task.deadline);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+  filtered = filtered.filter((task) => {
+    const taskDate = new Date(task.deadline)
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
 
     switch (filterParams.value.timeRange) {
       case 'today':
-        return taskDate.toDateString() === today.toDateString();
+        return taskDate.toDateString() === today.toDateString()
       case 'week':
-        const oneWeekLater = new Date();
-        oneWeekLater.setDate(today.getDate() + 7);
-        return taskDate >= today && taskDate <= oneWeekLater;
+        const oneWeekLater = new Date()
+        oneWeekLater.setDate(today.getDate() + 7)
+        return taskDate >= today && taskDate <= oneWeekLater
       case 'month':
-        const oneMonthLater = new Date();
-        oneMonthLater.setMonth(today.getMonth() + 1);
-        return taskDate >= today && taskDate <= oneMonthLater;
+        const oneMonthLater = new Date()
+        oneMonthLater.setMonth(today.getMonth() + 1)
+        return taskDate >= today && taskDate <= oneMonthLater
       case 'overdue':
-        return isOverdue(task.deadline) && task.status !== 'done';
+        return isOverdue(task.deadline) && task.status !== 'done'
       default:
-        return true;
+        return true
     }
-  });
+  })
 
   // Separate by status
   return {
     todo: filtered
-      .filter(task => task.status === 'todo')
+      .filter((task) => task.status === 'todo')
       .sort((a, b) => {
         // Sort by priority first, then by deadline
-        const priorityOrder = { high: 0, medium: 1, low: 2 };
+        const priorityOrder = { high: 0, medium: 1, low: 2 }
         if (priorityOrder[a.priority] !== priorityOrder[b.priority]) {
-          return priorityOrder[a.priority] - priorityOrder[b.priority];
+          return priorityOrder[a.priority] - priorityOrder[b.priority]
         }
-        return new Date(a.deadline).getTime() - new Date(b.deadline).getTime();
+        return new Date(a.deadline).getTime() - new Date(b.deadline).getTime()
       }),
-    doing: filtered.filter(task => task.status === 'doing'),
-    done: filtered.filter(task => task.status === 'done')
-  };
-});
+    doing: filtered.filter((task) => task.status === 'doing'),
+    done: filtered.filter((task) => task.status === 'done'),
+  }
+})
 
 // Overdue tasks
 const overdueTasks = computed(() => {
-  return tasks.value.filter(task => {
-    return isOverdue(task.deadline) && task.status !== 'done';
-  });
-});
+  return tasks.value.filter((task) => {
+    return isOverdue(task.deadline) && task.status !== 'done'
+  })
+})
 
 // Mark task as complete
 const markTaskComplete = (taskId: string) => {
-  const task = tasks.value.find(t => t.id === taskId);
+  const task = tasks.value.find((t) => t.id === taskId)
   if (task) {
-    task.status = 'done';
-    saveTasks();
+    task.status = 'done'
+    saveTasks()
   }
-};
+}
 
 // Delete task
 const deleteTask = (taskId: string) => {
   if (confirm('确定要删除这个任务吗？')) {
-    tasks.value = tasks.value.filter(task => task.id !== taskId);
-    saveTasks();
+    tasks.value = tasks.value.filter((task) => task.id !== taskId)
+    saveTasks()
   }
-};
+}
 
 // Navigate to task detail
 const navigateToDetail = (taskId: string) => {
-  router.push(`/task-detail/${taskId}`);
-};
+  router.push(`/task-detail/${taskId}`)
+}
 
 // Add new task
 const addTask = (taskData: Task) => {
-  tasks.value.push(taskData);
-  saveTasks();
-  showAddForm.value = false;
-};
+  tasks.value.push(taskData)
+  saveTasks()
+  showAddForm.value = false
+}
 </script>
 
 <style scoped>
