@@ -1,7 +1,7 @@
 <template>
   <div class="app-container">
     <!-- 加载动画 -->
-    <Loading :visible="isLoading" text="加载任务中..." />
+    <FullScreenLoading :visible="isLoading" text="加载任务中..." />
 
     <!-- 头部 -->
     <header class="app-header">
@@ -88,6 +88,14 @@
 
         <!-- 右侧：快捷操作和统计 -->
         <div class="app-main__right">
+          <!-- 快速添加任务按钮（桌面端） -->
+          <div class="quick-add-task">
+            <button class="quick-add-task__btn" @click="showAddForm = true">
+              <span class="quick-add-task__icon">+</span>
+              <span class="quick-add-task__text">添加任务</span>
+            </button>
+          </div>
+
           <!-- 任务统计卡片 -->
           <TaskStats :tasks="tasks" />
         </div>
@@ -119,7 +127,7 @@ import TaskList from '../components/task-list.vue'
 import TaskForm from '../components/task-form.vue'
 import TaskFilter from '../components/task-filter.vue'
 import TaskStats from '../components/task-stats.vue'
-import Loading from '../components/loading.vue'
+import FullScreenLoading from '../components/FullScreenLoading.vue'
 import type { Task } from '../utils/storage'
 import { isOverdue } from '../utils/date-format'
 
@@ -526,6 +534,54 @@ const addTask = (taskData: Task) => {
 .app-footer__text {
   font-size: 0.9rem;
   margin: 0;
+}
+
+/* 快速添加任务按钮（桌面端） */
+.quick-add-task {
+  background-color: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.quick-add-task__btn {
+  width: 100%;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 1rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+}
+
+.quick-add-task__btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(76, 175, 80, 0.4);
+  background-color: #43a047;
+}
+
+.quick-add-task__btn:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+}
+
+.quick-add-task__icon {
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.quick-add-task__text {
+  font-size: 1.1rem;
 }
 
 /* Responsive design */

@@ -58,21 +58,20 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
 import { isOverdue } from '../utils/date-format'
 import type { Task } from '../utils/storage'
-
-// Props
-const props = defineProps<{
-  title: string
-  tasks: Task[]
-}>()
 
 // Emits
 const emit = defineEmits<{
   (e: 'mark-complete', taskId: string): void
   (e: 'delete-task', taskId: string): void
   (e: 'navigate', taskId: string): void
+}>()
+
+// Props
+const { title, tasks } = defineProps<{
+  title: string
+  tasks: Task[]
 }>()
 
 // 确认删除状态管理
